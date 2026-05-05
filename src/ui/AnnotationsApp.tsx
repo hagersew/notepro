@@ -11,6 +11,7 @@ import {
   Heading,
   HStack,
   Input,
+  Link,
   Menu,
   MenuButton,
   MenuItem,
@@ -286,13 +287,23 @@ export function AppShell(props: { variant: 'popup' | 'sidepanel' }) {
                 size="md"
                 fontWeight="extrabold"
                 letterSpacing="-0.02em"
-                bgGradient="linear(to-r, indigo.300, purple.300)"
-                bgClip="text"
+                color={useColorModeValue('purple.700', 'purple.200')}
               >
                 NotePro
               </Heading>
               <Text fontSize="xs" color={subtleText} mt={1} lineHeight="short">
                 Highlights & notes from the web
+              </Text>
+              <Text fontSize="xs" color={subtleText} mt={1} lineHeight="short">
+                Powered by{' '}
+                <Link
+                  href="https://hagersew.com"
+                  isExternal
+                  color={useColorModeValue('purple.600', 'purple.300')}
+                  textDecoration="underline"
+                >
+                  Hagersew
+                </Link>
               </Text>
             </Box>
             <HStack spacing={2}>
@@ -528,7 +539,10 @@ export function AppShell(props: { variant: 'popup' | 'sidepanel' }) {
                     spacing={2}
                     flexWrap="wrap"
                   >
-                    <Button variant="surface" onClick={() => void scrollTo(a.id)}>
+                    <Button
+                      variant="surface"
+                      onClick={() => void scrollTo(a.id)}
+                    >
                       Scroll to
                     </Button>
                     <Button variant="surface" onClick={() => openEdit(a)}>

@@ -5,7 +5,7 @@ export default defineManifest({
   name: 'NotePro',
   description:
     'Highlight, annotate & save notes on any webpage. Organize ideas and share insights with ease.',
-  version: '0.1.0',
+  version: '0.0.1',
   icons: {
     '16': 'public/icons/icon16.png',
     '48': 'public/icons/icon48.png',
