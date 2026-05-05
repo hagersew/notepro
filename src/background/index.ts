@@ -7,6 +7,8 @@ import type {
 } from '@shared/messages'
 import { encodeBase64UrlJson } from '@shared/base64url'
 
+const recentSidePanelOpenByWindow = new Map<number, number>()
+
 async function getAll(): Promise<Annotation[]> {
   const data = await chrome.storage.local.get(STORAGE_KEY)
   const list = data[STORAGE_KEY]
@@ -17,7 +19,10 @@ async function saveAll(annotations: Annotation[]): Promise<void> {
   await chrome.storage.local.set({ [STORAGE_KEY]: annotations })
 }
 
-async function handleMessage(msg: ExtensionMessage): Promise<BackgroundResponse> {
+async function handleMessage(
+  msg: ExtensionMessage,
+  sender?: chrome.runtime.MessageSender,
+): Promise<BackgroundResponse> {
   switch (msg.type) {
     case 'GET_ALL_ANNOTATIONS': {
       const annotations = await getAll()
@@ -86,14 +91,24 @@ async function handleMessage(msg: ExtensionMessage): Promise<BackgroundResponse>
       await chrome.tabs.create({ url })
       return { ok: true }
     }
+    case 'OPEN_SIDEPANEL': {
+      const windowId = sender?.tab?.windowId
+      if (windowId == null) return { ok: false, error: 'No active tab window found' }
+      const now = Date.now()
+      const lastOpenAt = recentSidePanelOpenByWindow.get(windowId) ?? 0
+      if (now - lastOpenAt < 700) return { ok: true }
+      recentSidePanelOpenByWindow.set(windowId, now)
+      await chrome.sidePanel.open({ windowId })
+      return { ok: true }
+    }
     default:
       return { ok: false, error: 'Unknown message' }
   }
 }
 
 chrome.runtime.onMessage.addListener(
-  (message: ExtensionMessage, _sender, sendResponse: (r: BackgroundResponse) => void) => {
-    handleMessage(message)
+  (message: ExtensionMessage, sender, sendResponse: (r: BackgroundResponse) => void) => {
+    handleMessage(message, sender)
       .then(sendResponse)
       .catch((e: unknown) =>
         sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }),

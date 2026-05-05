@@ -19,6 +19,52 @@ injectHighlightStyles()
 let hydrateTimer: ReturnType<typeof setTimeout> | null = null
 let obs: MutationObserver | null = null
 let applyingHighlights = false
+let launcherBtn: HTMLButtonElement | null = null
+let openingSidePanel = false
+
+function mountOpenNoteProButton(): void {
+  if (launcherBtn || document.getElementById('notepro-open-btn')) return
+  const btn = document.createElement('button')
+  btn.id = 'notepro-open-btn'
+  btn.type = 'button'
+  btn.textContent = 'Open Note Pro'
+  btn.style.position = 'fixed'
+  btn.style.right = '16px'
+  btn.style.bottom = '16px'
+  btn.style.zIndex = '2147483645'
+  btn.style.padding = '10px 14px'
+  btn.style.border = '0'
+  btn.style.borderRadius = '999px'
+  btn.style.background = '#6b46c1'
+  btn.style.color = '#fff'
+  btn.style.fontFamily = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif'
+  btn.style.fontSize = '13px'
+  btn.style.fontWeight = '600'
+  btn.style.cursor = 'pointer'
+  btn.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25)'
+  btn.addEventListener('click', async () => {
+    if (openingSidePanel) return
+    openingSidePanel = true
+    btn.disabled = true
+    btn.style.opacity = '0.7'
+    btn.style.transform = 'translateY(1px)'
+    const res = await chrome.runtime.sendMessage({
+      type: 'OPEN_SIDEPANEL',
+    } satisfies ExtensionMessage)
+    if (res?.ok) {
+      launcherBtn?.remove()
+      launcherBtn = null
+      openingSidePanel = false
+      return
+    }
+    openingSidePanel = false
+    btn.disabled = false
+    btn.style.opacity = '1'
+    btn.style.transform = 'none'
+  })
+  launcherBtn = btn
+  document.documentElement.appendChild(btn)
+}
 
 function eventFromToolbar(evt: Event): boolean {
   const path = evt.composedPath?.() ?? []
@@ -81,7 +127,13 @@ function scrollToId(id: string): void {
 }
 
 chrome.runtime.onMessage.addListener((msg: { type?: string; id?: string }) => {
-  if (msg?.type === 'NOTEPRO_SCROLL_TO' && msg.id) scrollToId(msg.id)
+  if (msg?.type === 'NOTEPRO_SCROLL_TO' && msg.id) {
+    scrollToId(msg.id)
+    return
+  }
+  if (msg?.type === 'NOTEPRO_SHOW_OPEN_BUTTON') {
+    mountOpenNoteProButton()
+  }
 })
 
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -108,6 +160,7 @@ function patchHistory(): void {
 }
 
 patchHistory()
+mountOpenNoteProButton()
 
 if (!obs) {
   obs = new MutationObserver(() => {

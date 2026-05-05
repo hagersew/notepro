@@ -181,6 +181,25 @@ export function AppShell(props: { variant: 'popup' | 'sidepanel' }) {
     }
   };
 
+  const closeSidePanel = async () => {
+    try {
+      const tabs = await chrome.tabs.query({
+        active: true,
+        lastFocusedWindow: true,
+      });
+      const activeTabId = tabs[0]?.id;
+      if (activeTabId != null) {
+        await chrome.tabs.sendMessage(activeTabId, {
+          type: 'NOTEPRO_SHOW_OPEN_BUTTON',
+        });
+      }
+    } catch {
+      /* no active content script to notify */
+    } finally {
+      window.close();
+    }
+  };
+
   const scrollTo = async (id: string) => {
     const res = await send({ type: 'SCROLL_TO_ANNOTATION', id });
     if (!res.ok) toast({ title: res.error ?? 'Failed', status: 'error' });
@@ -322,7 +341,11 @@ export function AppShell(props: { variant: 'popup' | 'sidepanel' }) {
                 >
                   Side panel
                 </Button>
-              ) : null}
+              ) : (
+                <Button size="sm" variant="surface" onClick={() => void closeSidePanel()}>
+                  Close
+                </Button>
+              )}
             </HStack>
           </HStack>
         </Box>

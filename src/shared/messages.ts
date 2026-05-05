@@ -34,6 +34,10 @@ export type OpenShareViewerMessage = {
   payload: SharePayload
 }
 
+export type OpenSidePanelMessage = {
+  type: 'OPEN_SIDEPANEL'
+}
+
 export type BackgroundResponse =
   | { ok: true; annotations?: Annotation[]; annotation?: Annotation }
   | { ok: false; error: string }
@@ -51,6 +55,7 @@ export type ExtensionMessage =
   | GetAllAnnotationsMessage
   | ScrollToAnnotationMessage
   | OpenShareViewerMessage
+  | OpenSidePanelMessage
 
 export type ContentMessage =
   | { type: 'NOTEPRO_APPLY_HIGHLIGHTS'; annotations: Annotation[] }
